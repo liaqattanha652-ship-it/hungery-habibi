@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a09">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Hungry Habibi — Smart Table System</title>
+<style>
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;background:#080908}
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#080908;color:#f5f5f4;min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+input,select{font-size:16px}
+a{text-decoration:none;color:inherit}.wrap{max-width:1180px;margin:auto;padding:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:14px 0}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:54px;height:54px;object-fit:contain}
+.brand h1{font-size:20px;margin:0}.brand small{color:#a8a29e}
+.nav{display:flex;gap:8px;flex-wrap:wrap}.nav button,.btn{border:1px solid #292524;background:#141413;color:#f5f5f4;padding:11px 14px;border-radius:12px}
+.nav .active,.gold{background:#b8892f;color:#090909;border-color:#d4a44d;font-weight:800}
+.hero{padding:28px 0 18px}.hero h2{font-size:clamp(30px,5vw,54px);margin:0 0 8px}.hero p{color:#a8a29e;max-width:700px;line-height:1.6}
+.card{background:linear-gradient(180deg,#141413,#0e0e0d);border:1px solid #292524;border-radius:20px;padding:18px;box-shadow:0 12px 40px #0006}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.two{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.label{font-size:12px;color:#a8a29e;margin:0 0 6px}.field{width:100%;padding:13px;border-radius:12px;border:1px solid #292524;background:#0a0a09;color:#fff}
+.table{border:1px solid #292524;border-radius:16px;padding:15px;background:#10100f;min-height:130px}
+.table.available{border-color:#365b42}.table.reserved{border-color:#8c6b2c}.table.occupied{border-color:#713838}
+.table-head{display:flex;justify-content:space-between;align-items:center}.status{font-size:11px;padding:5px 8px;border-radius:999px;background:#292524}.available .status{background:#183d25;color:#a7f3b0}.reserved .status{background:#4a3816;color:#fde68a}.occupied .status{background:#4b1d1d;color:#fecaca}
+.table h3{margin:10px 0 4px}.muted{color:#a8a29e;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn.small{padding:8px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:15px 0}.stat{padding:14px;border:1px solid #292524;border-radius:15px;background:#10100f}.stat b{font-size:24px;display:block}.stat span{font-size:12px;color:#a8a29e}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.searchrow .field:first-child{flex:1;min-width:220px}
+.notice{padding:12px;border-radius:13px;background:#2a2110;border:1px solid #5b4317;color:#fde68a;font-size:13px;margin:12px 0}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal.show{display:flex}.modal .card{width:min(440px,100%)}
+.toast{position:fixed;right:16px;bottom:16px;background:#f5f5f4;color:#111;padding:12px 16px;border-radius:12px;display:none;z-index:30}
+.empty{padding:30px;text-align:center;color:#a8a29e}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.wrap{padding:12px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.brand img{width:44px;height:44px}.hero{padding-top:18px}.hero h2{font-size:32px}.nav{width:100%}.nav button{flex:1}.stats{grid-template-columns:repeat(2,1fr)}}
+@supports(padding:max(0px)){body{padding-bottom:env(safe-area-inset-bottom)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <img src="https://hungryhabibipk.com/wp-content/uploads/2025/11/Logo-PNG-scaled.png" alt="Hungry Habibi">
+    <div><h1>HUNGRY HABIBI</h1><small>Smart Table & Queue System</small></div>
+  </div>
+  <nav class="nav">
+    <button id="customerTab" class="active" onclick="showView('customer')">Customer</button>
+    <button id="managerTab" onclick="showView('manager')">Manager</button>
+  </nav>
+</header>
+
+<section id="customerView">
+  <div class="hero">
+    <h2>Reserve before you arrive.</h2>
+    <p>Customer ko restaurant mein long waiting line mein kharay hone ki zaroorat nahi. Table choose karein, time select karein aur token lein.</p>
+  </div>
+  <div class="two">
+    <div class="card">
+      <h3>1. Available table choose karein</h3>
+      <div id="customerTables" class="grid"></div>
+    </div>
+    <div class="card">
+      <h3>2. Booking details</h3>
+      <div class="notice">Aap sirf available tables dekhte hain. Manager controls customer screen par nahi hain.</div>
+      <p class="label">Selected table</p><input id="selectedTable" class="field" readonly placeholder="Select a table">
+      <p class="label" style="margin-top:12px">Name</p><input id="cName" class="field" placeholder="Your name" autocomplete="name">
+      <p class="label" style="margin-top:12px">Phone (optional)</p><input id="cPhone" class="field" placeholder="03xx..." inputmode="tel" autocomplete="tel">
+      <p class="label" style="margin-top:12px">Guests</p><input id="cGuests" class="field" type="number" min="1" max="20" value="2">
+      <p class="label" style="margin-top:12px">Arrival time</p>
+      <select id="cTime" class="field"><option>07:00 PM</option><option>07:30 PM</option><option>08:00 PM</option><option>08:30 PM</option><option>09:00 PM</option><option>09:30 PM</option></select>
+      <button class="btn gold" style="width:100%;margin-top:15px" onclick="bookTable()">Confirm booking & get token</button>
+      <div id="customerResult"></div>
+    </div>
+  </div>
+</section>
+
+<section id="managerView" style="display:none">
+  <div class="hero">
+    <h2>Manager Control Center.</h2>
+    <p>Restaurant staff yahan se tables, bookings aur live status handle karte hain. Customer ko ye controls nahi milte.</p>
+  </div>
+  <div id="managerLogin" class="card">
+    <h3>Manager login</h3>
+    <p class="muted">Demo: username <b>manager</b> / password <b>1234</b></p>
+    <div class="two" style="grid-template-columns:1fr 1fr">
+      <input id="mUser" class="field" placeholder="Username" autocomplete="username">
+      <input id="mPass" class="field" type="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    <button class="btn gold" style="margin-top:12px" onclick="managerLogin()">Secure manager login</button>
+    <div id="loginError" class="notice" style="display:none"></div>
+  </div>
+
+  <div id="managerPanel" style="display:none">
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <div class="searchrow">
+        <input id="mSearch" class="field" placeholder="🔎 Search customer, token, phone or table..." oninput="loadManager()">
+        <select id="mStatus" class="field" style="max-width:190px" onchange="loadManager()">
+          <option value="all">All statuses</option><option value="available">Available</option><option value="reserved">Reserved</option><option value="occupied">Occupied</option>
+        </select>
+      </div>
+      <div id="managerTables" class="grid"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <h3 style="margin:0">Bookings</h3><button class="btn small" onclick="loadManager()">↻ Refresh</button>
+      </div>
+      <div id="bookingsList"></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let managerToken = sessionStorage.getItem("hh_manager_token") || "";
+let selected = null;
+const api = (p,o={}) => fetch(p,{...o,headers:{"Content-Type":"application/json",...(o.headers||{})}}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Request failed");return d});
+
+function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",2500)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showView(v){
+  document.getElementById("customerView").style.display=v==="customer"?"block":"none";
+  document.getElementById("managerView").style.display=v==="manager"?"block":"none";
+  document.getElementById("customerTab").classList.toggle("active",v==="customer");
+  document.getElementById("managerTab").classList.toggle("active",v==="manager");
+  if(v==="manager" && managerToken) openManager(); 
+}
+async function loadCustomer(){
+  try{
+    const d=await api("/api/tables?status=available");
+    document.getElementById("customerTables").innerHTML=d.tables.map(t=>`
+      <div class="table available">
+        <div class="table-head"><b>Table ${t.id}</b><span class="status">AVAILABLE</span></div>
+        <h3>${t.capacity} Guests</h3><div class="muted">Tap to select</div>
+        <button class="btn small gold" onclick="selectTable(${t.id},${t.capacity})">Select table</button>
+      </div>`).join("") || '<div class="empty">No tables are available right now.</div>';
+  }catch(e){toast(e.message)}
+}
+function selectTable(id,cap){selected=id;document.getElementById("selectedTable").value=`Table ${id} — ${cap} seats`;document.getElementById("cGuests").max=cap}
+async function bookTable(){
+  if(!selected)return toast("Please select an available table");
+  const body={tableId:selected,name:document.getElementById("cName").value,phone:document.getElementById("cPhone").value,guests:Number(document.getElementById("cGuests").value),time:document.getElementById("cTime").value};
+  try{const d=await api("/api/bookings",{method:"POST",body:JSON.stringify(body)});
+    document.getElementById("customerResult").innerHTML=`<div class="notice" style="margin-top:15px"><b>Booking confirmed 🎉</b><br>Token: <strong>${esc(d.booking.id)}</strong><br>Table ${d.booking.tableId} · ${d.booking.guests} guests · ${esc(d.booking.time)}<br>Show this token at reception.</div>`;
+    selected=null;document.getElementById("selectedTable").value="";loadCustomer();
+  }catch(e){toast(e.message)}
+}
+async function managerLogin(){
+  try{const d=await api("/api/manager/login",{method:"POST",body:JSON.stringify({username:document.getElementById("mUser").value,password:document.getElementById("mPass").value})});
+    managerToken=d.accessToken;sessionStorage.setItem("hh_manager_token",managerToken);openManager();
+  }catch(e){const x=document.getElementById("loginError");x.textContent=e.message;x.style.display="block"}
+}
+function openManager(){document.getElementById("managerLogin").style.display="none";document.getElementById("managerPanel").style.display="block";loadManager()}
+async function managerFetch(p,o={}){o.headers={...(o.headers||{}),Authorization:"Bearer "+managerToken};return api(p,o)}
+async function loadManager(){
+  if(!managerToken)return;
+  try{
+    const q=encodeURIComponent(document.getElementById("mSearch").value||"");
+    const s=document.getElementById("mStatus").value;
+    const [td,bd]=await Promise.all([managerFetch(`/api/tables?search=${q}&status=${s}`),managerFetch(`/api/bookings?search=${q}`)]);
+    const all=await managerFetch("/api/tables");
+    const arr=all.tables;
+    document.getElementById("stats").innerHTML=[
+      ["Available",arr.filter(x=>x.status==="available").length],
+      ["Reserved",arr.filter(x=>x.status==="reserved").length],
+      ["Occupied",arr.filter(x=>x.status==="occupied").length],
+      ["Bookings",bd.bookings.filter(x=>x.status!=="cancelled").length]
+    ].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join("");
+    document.getElementById("managerTables").innerHTML=td.tables.map(t=>`
+      <div class="table ${t.status}">
+       <div class="table-head"><b>Table ${t.id}</b><span class="status">${t.status.toUpperCase()}</span></div>
+       <h3>${t.capacity} seats</h3>
+       ${t.booking?`<div class="muted">${esc(t.booking.name)} · ${esc(t.booking.id)}<br>${esc(t.booking.time)} · ${t.booking.guests} guests</div>`:`<div class="muted">No active booking</div>`}
+       <div class="actions">
+        ${t.status!=="available"?`<button class="btn small" onclick="setStatus(${t.id},'available')">Free</button>`:""}
+        ${t.status!=="reserved"?`<button class="btn small" onclick="setStatus(${t.id},'reserved')">Reserve</button>`:""}
+        ${t.status!=="occupied"?`<button class="btn small" onclick="setStatus(${t.id},'occupied')">Occupy</button>`:""}
+       </div>
+      </div>`).join("") || '<div class="empty">No matching tables.</div>';
+    document.getElementById("bookingsList").innerHTML=bd.bookings.map(b=>`
+      <div style="padding:13px 0;border-bottom:1px solid #292524">
+       <b>${esc(b.id)}</b> · ${esc(b.name)} · Table ${b.tableId}
+       <div class="muted">${esc(b.time)} · ${b.guests} guests · ${esc(b.status)}${b.phone?" · "+esc(b.phone):""}</div>
+       <button class="btn small" style="margin-top:7px" onclick="cancelBooking('${esc(b.id)}')">Cancel</button>
+      </div>`).join("") || '<div class="empty">No bookings found.</div>';
+  }catch(e){
+    if(e.message.includes("authentication")){managerToken="";sessionStorage.removeItem("hh_manager_token");location.reload()}
+    else toast(e.message)
+  }
+}
+async function setStatus(id,status){try{await managerFetch(`/api/tables/${id}`,{method:"PATCH",body:JSON.stringify({status})});toast(`Table ${id} → ${status}`);loadManager();loadCustomer()}catch(e){toast(e.message)}}
+async function cancelBooking(id){if(!confirm("Cancel this booking?"))return;try{await managerFetch(`/api/bookings/${encodeURIComponent(id)}`,{method:"DELETE"});toast("Booking cancelled");loadManager();loadCustomer()}catch(e){toast(e.message)}}
+loadCustomer();
+setInterval(()=>{loadCustomer();if(managerToken)loadManager()},8000);
+</script>
+</body>
+</html>
